@@ -1,0 +1,13 @@
+# ESSE CODIGO DEVE ESTAR NO COMPUTADOR QUE VAI ENVIAR O COMANDO DE INCIAR OU PARAR PARA O DRONE.
+import socket
+
+HOST = "IP_DA_RASPBERRY"
+PORT = 5000
+
+client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+client.connect((HOST, PORT))
+
+
+# PARA PARAR A MISSAO, TROQUE O START PARA STOP ABAIXO E RODE O CODIGO NOVAMENTE.
+client.send("START".encode())
+client.close()
