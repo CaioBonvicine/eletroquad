@@ -1,10 +1,6 @@
 import asyncio
 from mavsdk.telemetry import LandedState
 
-# -------------------------
-# MONITORAMENTO DE BATERIA
-# -------------------------
-
 async def monitor_battery(drone, min_voltage=14.0):
     async for battery in drone.telemetry.battery():
         voltage = battery.voltage_v
@@ -18,10 +14,6 @@ async def monitor_battery(drone, min_voltage=14.0):
         await asyncio.sleep(1)
 
 
-# -------------------------
-# MONITORAMENTO DE LINK
-# -------------------------
-
 async def monitor_connection(drone):
     async for state in drone.core.connection_state():
         if not state.is_connected:
@@ -29,18 +21,9 @@ async def monitor_connection(drone):
             break
 
 
-# -------------------------
-# FUNÇÃO DE EMERGÊNCIA
-# -------------------------
-
 async def emergency_land(drone):
     print("[EMERGÊNCIA] Pouso imediato acionado!")
     await drone.action.land()
-
-
-# -------------------------
-# VERIFICAR SE POUSOU
-# -------------------------
 
 async def wait_until_landed(drone):
     async for state in drone.telemetry.landed_state():
