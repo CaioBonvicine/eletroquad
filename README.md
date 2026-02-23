@@ -1,6 +1,6 @@
 # 🚁 ELETROQUAD -- Sistema Autônomo
 
-Projeto desenvolvido para a **Competição EletroQuad SAE BRASIL 2026**.
+Projeto desenvolvido para a **Competições de Drones Autônomos**.
 
 ------------------------------------------------------------------------
 
