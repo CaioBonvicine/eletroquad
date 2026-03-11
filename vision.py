@@ -1,23 +1,28 @@
 import cv2
 import numpy as np
-import pyrealsense2 as rs
 
 def init_camera():
-    pipeline = rs.pipeline()
-    config = rs.config()
-    config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
-    pipeline.start(config)
-    return pipeline
+    cap = cv2.VideoCapture(0)
 
-def detect_aruco(pipeline):
-    frames = pipeline.wait_for_frames()
-    color_frame = frames.get_color_frame()
-    if not color_frame:
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+    cap.set(cv2.CAP_PROP_FPS, 30)
+
+    if not cap.isOpened():
+        print("Erro ao abrir câmera")
         return None
 
-    image = np.asanyarray(color_frame.get_data())
+    return cap
 
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+def detect_aruco(cap):
+
+    ret, frame = cap.read()
+
+    if not ret:
+        return None
+
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
     aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
     parameters = cv2.aruco.DetectorParameters()
 

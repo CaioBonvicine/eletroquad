@@ -31,18 +31,19 @@ async def run():
             await arm_and_takeoff(drone, TAKEOFF_ALTITUDE)
             await start_offboard(drone)
 
-            pipeline = init_camera()
+            camera = init_camera()
             asyncio.create_task(monitor_battery(drone))
 
             print("Buscando ArUco...")
 
             while True:
-                aruco_id = detect_aruco(pipeline)
+                aruco_id = detect_aruco(camera)
 
                 if aruco_id is not None:
                     print("Alvo encontrado!")
                     break
-
+            
+            camera.release()
             await land(drone)
             await wait_until_landed(drone)
 

@@ -63,13 +63,6 @@ pip install pymavlink
 pip install opencv-python
 pip install opencv-contrib-python
 pip install numpy
-pip install pyrealsense2
-```
-
-### ⚠️ Caso `pyrealsense2` falhe:
-
-``` bash
-sudo apt install librealsense2-dev
 ```
 
 ------------------------------------------------------------------------
@@ -166,10 +159,15 @@ sudo reboot
 
 # 📌 Estrutura Recomendada do Projeto
 
-    eletroquad/
+   eletroquad/
     │
     ├── venv/
     ├── main.py
-    ├── start.sh
+    ├── flight_control.py
+    ├── vision.py
+    ├── safety.py
+    ├── command_server.py
+    ├── config.py
+    ├── start.py
     ├── start_mission.py
     └── README.md
