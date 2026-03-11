@@ -32,6 +32,11 @@ async def run():
             await start_offboard(drone)
 
             camera = init_camera()
+
+            if camera is None:
+                print("Câmera não detectada! Abortando missão.")
+                await land(drone)
+                return
             asyncio.create_task(monitor_battery(drone))
 
             print("Buscando ArUco...")
