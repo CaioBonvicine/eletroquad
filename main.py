@@ -5,69 +5,79 @@ from flight_control import *
 from vision import *
 from command_server import *
 from safety import *
+from utils import *
 
 async def run():
 
-    drone = System()
-    await drone.connect(system_address=CONNECTION_STRING)
-
-    print("Conectando ao drone...")
-
-    async for state in drone.core.connection_state():
-        if state.is_connected:
-            print("Drone conectado!")
-            break
-
-    print("Sistema pronto - aguardando START")
-
     while True:
-
         try:
-            command = wait_for_command()
+            print("\n[BOOT] Iniciando sistema...")
 
-            if command == "START":
+            drone = System()
+            await drone.connect(system_address=CONNECTION_STRING)
+            connected = await wait_for_connection(drone)
 
-                print("Iniciando missão")
+            if not connected:
+                print("[RETRY] Tentando novamente em 10s...\n")
+                await asyncio.sleep(10)
+                continue
 
-                await arm_and_takeoff(drone, TAKEOFF_ALTITUDE)
-                await start_offboard(drone)
+            print("[OK] Sistema pronto - aguardando START")
 
-                camera = init_camera()
+            while True:
 
-                if camera is None:
-                    print("Câmera não detectada! Abortando missão.")
+                command = wait_for_command()
+
+                if command == "START":
+
+                    print("[MISSÃO] Iniciando")
+
+                    await arm_and_takeoff(drone, TAKEOFF_ALTITUDE)
+                    await start_offboard(drone)
+
+                    camera = init_camera()
+
+                    if camera is None:
+                        print("[ERRO] Câmera não detectada!")
+                        await land(drone)
+                        continue
+
+                    asyncio.create_task(monitor_battery(drone))
+
+                    print("[VISÃO] Buscando ArUco...")
+
+                    while True:
+                        aruco_id = detect_aruco(camera)
+
+                        if aruco_id is not None:
+                            print(f"[ALVO] Detectado ID {aruco_id}")
+                            break
+
+                        await asyncio.sleep(0.1)
+
+                    camera.release()
+
                     await land(drone)
-                    continue
+                    await wait_until_landed(drone)
 
-                asyncio.create_task(monitor_battery(drone))
+                    print("[MISSÃO] Finalizada")
 
-                print("Buscando ArUco...")
-
-                while True:
-                    aruco_id = detect_aruco(camera)
-
-                    if aruco_id is not None:
-                        print("Alvo encontrado!")
-                        break
-
-                    await asyncio.sleep(0.1)
-
-                camera.release()
-
-                await land(drone)
-                await wait_until_landed(drone)
-
-            elif command == "STOP":
-                await emergency_land(drone)
+                elif command == "STOP":
+                    print("[COMANDO] STOP recebido")
+                    await emergency_land(drone)
 
         except Exception as e:
-            print(f"[ERRO] {e}")
+            print(f"[ERRO GLOBAL] {e}")
 
             try:
-                print("[RECOVERY] Tentando pousar por segurança...")
+                print("[RECOVERY] Tentando pousar...")
                 await land(drone)
             except:
-                print("[RECOVERY] Falha ao enviar comando de pouso")
+                print("[RECOVERY] Falha ao pousar")
 
-            print("[RETRY] Reiniciando em 10 segundos...\n")
+            print("[RESTART] Reiniciando em 10s...\n")
             await asyncio.sleep(10)
+
+
+if __name__ == "__main__":
+    asyncio.run(run())
