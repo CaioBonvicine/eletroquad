@@ -14,7 +14,13 @@ async def run():
             print("\n[BOOT] Iniciando sistema...")
 
             drone = System()
-            await drone.connect(system_address=CONNECTION_STRING)
+            try:
+                await drone.connect(system_address=CONNECTION_STRING)
+            except Exception as e:
+                print(f"[ERRO] Falha ao conectar: {e}")
+                print("[RETRY] Tentando novamente em 10s...\n")
+                await asyncio.sleep(10)
+                continue
             connected = await wait_for_connection(drone)
 
             if not connected:
