@@ -22,37 +22,52 @@ async def run():
 
     while True:
 
-        command = wait_for_command()
+        try:
+            command = wait_for_command()
 
-        if command == "START":
+            if command == "START":
 
-            print("Iniciando missão")
+                print("Iniciando missão")
 
-            await arm_and_takeoff(drone, TAKEOFF_ALTITUDE)
-            await start_offboard(drone)
+                await arm_and_takeoff(drone, TAKEOFF_ALTITUDE)
+                await start_offboard(drone)
 
-            camera = init_camera()
+                camera = init_camera()
 
-            if camera is None:
-                print("Câmera não detectada! Abortando missão.")
+                if camera is None:
+                    print("Câmera não detectada! Abortando missão.")
+                    await land(drone)
+                    continue
+
+                asyncio.create_task(monitor_battery(drone))
+
+                print("Buscando ArUco...")
+
+                while True:
+                    aruco_id = detect_aruco(camera)
+
+                    if aruco_id is not None:
+                        print("Alvo encontrado!")
+                        break
+
+                    await asyncio.sleep(0.1)
+
+                camera.release()
+
                 await land(drone)
-                return
-            asyncio.create_task(monitor_battery(drone))
+                await wait_until_landed(drone)
 
-            print("Buscando ArUco...")
+            elif command == "STOP":
+                await emergency_land(drone)
 
-            while True:
-                aruco_id = detect_aruco(camera)
+        except Exception as e:
+            print(f"[ERRO] {e}")
 
-                if aruco_id is not None:
-                    print("Alvo encontrado!")
-                    break
-            
-            camera.release()
-            await land(drone)
-            await wait_until_landed(drone)
+            try:
+                print("[RECOVERY] Tentando pousar por segurança...")
+                await land(drone)
+            except:
+                print("[RECOVERY] Falha ao enviar comando de pouso")
 
-        elif command == "STOP":
-            await emergency_land(drone)
-
-asyncio.run(run())
+            print("[RETRY] Reiniciando em 10 segundos...\n")
+            await asyncio.sleep(10)
